@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    env_file: .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+      MONGO_INITDB_DATABASE: shopper_test
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+  backend:
+    build: .
+    container_name: nest_server
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - backend-data:/app
+      - /app/node_modules
+    depends_on:
+      - mongo
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/shopper_test
+
+volumes:
+  mongo-data:
+  backend-data:
