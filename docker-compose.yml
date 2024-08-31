@@ -18,17 +18,21 @@ services:
   backend:
     build: .
     container_name: nest_server
+    restart: always
     command: npm run start:dev
     ports:
       - "3000:3000"
     volumes:
       - backend-data:/app
+      - .:/app
       - /app/node_modules
     depends_on:
       - mongo
     env_file: .env
     environment:
       MONGO_URI: mongodb://mongodb:27017/shopper_test
+    stdin_open: true
+    tty: true
 
 volumes:
   mongo-data:
