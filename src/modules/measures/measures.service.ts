@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel, Prop } from '@nestjs/mongoose';
+import { InjectModel } from '@nestjs/mongoose';
 import { Measure, Measures } from './measures.schema';
 import { Model } from 'mongoose';
 import { UploadMeasureDto } from './dto/create-measures.dto';
@@ -109,7 +109,7 @@ export class MeasuresService {
     };
 
     if (customer_measures) {
-      const updatedMeasure = await this.measuresModel.updateOne(
+      await this.measuresModel.updateOne(
         {
           _id: customer_measures._id,
         },
@@ -167,5 +167,28 @@ export class MeasuresService {
         },
       },
     );
+  }
+
+  async list(customer_code: string, measure_type?: string): Promise<Measures> {
+    const customer_measures = await this.measuresModel.findOne({
+      customer_code: customer_code,
+    });
+
+    if (!customer_measures) {
+      throw new HttpException(
+        {
+          error_code: 'MEASURE_NOT_FOUND',
+          error_description: 'Nenhuma leitura encontrada',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (typeof measure_type === 'string') {
+      customer_measures.measures = customer_measures.measures.filter(
+        (e) => e.measure_type.toUpperCase() === measure_type.toUpperCase(),
+      );
+    }
+    return customer_measures;
   }
 }
