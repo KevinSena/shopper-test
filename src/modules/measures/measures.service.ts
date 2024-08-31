@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectModel, Prop } from '@nestjs/mongoose';
 import { Measure, Measures } from './measures.schema';
 import { Model } from 'mongoose';
 import { UploadMeasureDto } from './dto/create-measures.dto';
@@ -97,15 +97,30 @@ export class MeasuresService {
       }
     });
 
+    const newMeasure = {
+      measure_uuid: v4(),
+      measure_datetime: uploadMeasureDto.measure_datetime,
+      measure_type: uploadMeasureDto.measure_type,
+      image_url: uploadResponse.file.uri,
+      measure_value: Number(result.response.text()),
+      has_confirmed: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    if (customer_measures) {
+      const updatedMeasure = await this.measuresModel.updateOne(
+        {
+          _id: customer_measures._id,
+        },
+        { $push: { measures: newMeasure } },
+      );
+      return newMeasure;
+    }
+
     const createdMeasure = await this.measuresModel.create({
       customer_code: uploadMeasureDto.customer_code,
-      measures: {
-        measure_uuid: v4(),
-        measure_datetime: uploadMeasureDto.measure_datetime,
-        measure_type: uploadMeasureDto.measure_type,
-        image_url: uploadResponse.file.uri,
-        measure_value: Number(result.response.text()),
-      },
+      measures: newMeasure,
     });
 
     return createdMeasure.measures.pop();
