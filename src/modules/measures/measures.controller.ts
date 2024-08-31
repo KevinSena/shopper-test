@@ -1,6 +1,13 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { MeasuresService } from './measures.service';
 import { UploadMeasureDto } from './dto/create-measures.dto';
+import { ConfirmMeasureDto } from './dto/confirm-measure.dto';
 
 @Controller()
 export class MeasuresController {
@@ -20,6 +27,14 @@ export class MeasuresController {
       image_url: result.image_url,
       measure_value: result.measure_value,
       measure_uuid: result.measure_uuid,
+    };
+  }
+
+  @Patch('/confirm')
+  async confirmMeasure(@Body() confirmMeasureDto: ConfirmMeasureDto) {
+    await this.measuresService.confirm(confirmMeasureDto);
+    return {
+      success: true,
     };
   }
 }

@@ -8,6 +8,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GoogleAIFileManager } from '@google/generative-ai/server';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ConfirmMeasureDto } from './dto/confirm-measure.dto';
 
 @Injectable()
 export class MeasuresService {
@@ -108,5 +109,48 @@ export class MeasuresService {
     });
 
     return createdMeasure.measures.pop();
+  }
+
+  async confirm(confirmMeasureDto: ConfirmMeasureDto): Promise<void> {
+    const customer_measures = await this.measuresModel.findOne({
+      'measures.measure_uuid': confirmMeasureDto.measure_uuid,
+    });
+    if (!customer_measures) {
+      throw new HttpException(
+        {
+          error_code: 'MEASURE_NOT_FOUND',
+          error_description: 'Leitura não encontrada',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    console.log(customer_measures);
+    if (
+      customer_measures.measures.find(
+        (e) => e.measure_uuid === confirmMeasureDto.measure_uuid,
+      ).has_confirmed === true
+    ) {
+      throw new HttpException(
+        {
+          error_code: 'CONFIRMATION_DUPLICATE',
+          error_description: 'Leitura do mês já realizada',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    await this.measuresModel.updateOne(
+      {
+        _id: customer_measures._id,
+        'measures.measure_uuid': confirmMeasureDto.measure_uuid,
+      },
+      {
+        $set: {
+          'measures.$.measure_value': confirmMeasureDto.confirmed_value,
+          'measures.$.has_confirmed': true,
+        },
+      },
+    );
   }
 }

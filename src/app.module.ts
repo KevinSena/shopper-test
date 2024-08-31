@@ -4,11 +4,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import * as process from 'node:process';
 import { MeasuresModule } from './modules/measures/measures.module';
 
-console.log(
-  process.env.MONGO_INITDB_ROOT_PASSWORD,
-  process.env.MONGO_INITDB_ROOT_USERNAME,
-);
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
